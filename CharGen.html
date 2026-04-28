@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharGen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            background-image: radial-gradient(circle at top, rgba(99, 102, 241, 0.14), transparent 32%), linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 1));
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #818cf8, #c084fc, #f472b6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Custom scrollbar for the results area */
+        .scroll-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scroll-area::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5); 
+        }
+        .scroll-area::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        .scroll-area::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+
+        .loader {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #818cf8;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .result-card {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 0.85rem;
+            border-radius: 1rem;
+            gap: 0.75rem;
+        }
+
+        .result-main {
+            min-width: 0;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .btn-icon {
+            padding: 0.25rem 0.3rem;
+            border-radius: 0.3rem;
+            transition: all 0.2s ease;
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.05rem;
+            min-width: 28px;
+        }
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #818cf8;
+        }
+        
+        .lang-tag {
+            font-size: 0.52rem;
+            font-weight: 700;
+            opacity: 0.7;
+            letter-spacing: 0.04em;
+        }
+
+        /* Mood Button Styling */
+        .mood-btn {
+            padding: 0.5rem;
+            border-radius: 0.65rem;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .mood-btn:hover {
+            color: #818cf8;
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+        .mood-btn.active {
+            background: rgba(79, 70, 229, 0.2);
+            border-color: #6366f1;
+            color: #818cf8;
+            box-shadow: 0 0 15px -3px rgba(99, 102, 241, 0.3);
+        }
+
+        .tab-btn {
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.85rem;
+            border: 1px solid transparent;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            transition: all 0.2s ease;
+        }
+        .tab-btn:hover {
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .tab-btn.active {
+            color: #e0e7ff;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.28), rgba(192, 132, 252, 0.18));
+            border-color: rgba(129, 140, 248, 0.45);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .view-panel {
+            display: none;
+        }
+        .view-panel.active {
+            display: flex;
+        }
+
+        .utility-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 0.75rem;
+            border: 1px solid #334155;
+            background: rgba(15, 23, 42, 0.7);
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .utility-btn.compact-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 0.65rem;
+        }
+
+        .utility-btn.compact-btn i {
+            font-size: 0.78rem;
+        }
+
+        .result-actions {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.35rem;
+            width: 100%;
+        }
+
+        .result-actions .utility-btn {
+            width: 100%;
+            height: 2rem;
+        }
+
+        .delete-action {
+            grid-column: 5;
+        }
+
+        .speaker-row {
+            display: inline-flex;
+            width: fit-content;
+            max-width: 100%;
+            align-self: flex-start;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            padding: 0.2rem;
+            margin-top: 0.35rem;
+        }
+
+        .result-name {
+            font-size: 1.45rem;
+            line-height: 1.1;
+        }
+
+        .result-pronunciation {
+            margin-top: 0.15rem;
+            font-size: 0.8rem;
+        }
+
+        .result-meta {
+            margin-top: 0.35rem;
+            gap: 0.35rem;
+            font-size: 0.64rem;
+            letter-spacing: 0.16em;
+        }
+
+        .result-side {
+            width: clamp(10rem, 36%, 14rem);
+            flex: 0 0 clamp(10rem, 36%, 14rem);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+        }
+
+        .control-selector {
+            min-width: 0;
+        }
+
+        .selector-label-value {
+            min-width: 4.5rem;
+            text-align: right;
+        }
+        .utility-btn:hover {
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+        }
+        .favorite-btn.active {
+            color: #fb7185;
+            border-color: rgba(244, 63, 94, 0.45);
+            background: rgba(127, 29, 29, 0.28);
+        }
+        .favorite-btn.inactive {
+            color: #64748b;
+        }
+        .delete-btn:hover {
+            color: #fda4af;
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        .empty-state {
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            text-align: center;
+        }
+
+        .ad-placeholder {
+            width: 100%;
+            height: calc(100vh - 4rem);
+            position: sticky;
+            top: 2rem;
+            border-radius: 1.5rem;
+            border: 1px solid rgba(148, 163, 184, 0.08);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.16), rgba(30, 41, 59, 0.08));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            opacity: 0.08;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(148, 163, 184, 0.1);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 0.8rem 0.95rem;
+            border-radius: 0.85rem;
+            border: 1px solid rgba(71, 85, 105, 0.8);
+            background: rgba(15, 23, 42, 0.7);
+            color: #e2e8f0;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .custom-input:focus {
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+        }
+
+        .primary-action {
+            padding: 0.8rem 1rem;
+            border-radius: 0.85rem;
+            border: 1px solid rgba(129, 140, 248, 0.35);
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.95), rgba(124, 58, 237, 0.85));
+            color: white;
+            font-weight: 700;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .primary-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 30px -18px rgba(129, 140, 248, 0.9);
+        }
+
+        @media (max-width: 767px) {
+            .result-card {
+                flex-direction: column;
+                padding: 0.8rem;
+                gap: 0.5rem;
+            }
+
+            .result-main,
+            .result-side {
+                width: 100%;
+            }
+
+            .result-name {
+                font-size: 1.3rem;
+            }
+
+            .result-side {
+                align-items: stretch;
+                justify-content: flex-end;
+                gap: 0.35rem;
+                margin-top: 0.15rem;
+            }
+
+            .utility-btn {
+                width: 34px;
+                height: 34px;
+            }
+
+            .utility-btn.compact-btn {
+                width: 26px;
+                height: 26px;
+            }
+
+            .utility-btn.compact-btn i {
+                font-size: 0.72rem;
+            }
+
+            .result-actions {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+        
+        /* Toggle Animation */
+        .details-content {
+            transition: all 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .details-content.open {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 0.75rem;
+        }
+        .caret-icon {
+            transition: transform 0.3s ease;
+        }
+        .caret-icon.open {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+
+    <div class="w-full h-full flex items-stretch justify-center gap-6 px-4 2xl:px-8">
+        <aside class="hidden 2xl:flex w-56 flex-none justify-end py-8">
+            <div class="ad-placeholder" aria-hidden="true">Ad Space</div>
+        </aside>
+
+        <div class="h-full w-full max-w-3xl flex flex-col items-center">
+            <!-- Fixed Header Section -->
+            <div class="flex-none w-full max-w-2xl px-4 pt-5 pb-1 z-10 flex flex-col items-center">
+                <div class="text-center w-full">
+                    <div class="inline-flex flex-col items-end">
+                        <h1 class="text-3xl md:text-4xl font-bold mb-1 tracking-tight">
+                            <span class="gradient-text">CharGen</span>
+                        </h1>
+                        <a href="https://veoplix.com" target="_blank" rel="noreferrer noopener" class="-mt-1 text-[0.68rem] md:text-xs font-medium tracking-[0.18em] text-slate-500 hover:text-indigo-300 transition-colors lowercase">
+                            by Veoplix
+                        </a>
+                    </div>
+                    
+                    <!-- Toggleable Subtitle -->
+                    <button id="detailsToggle" class="group flex items-center justify-center gap-2 mx-auto text-slate-400 hover:text-indigo-300 transition-colors text-sm md:text-base focus:outline-none">
+                        <span>Generate completely original, pronounceable character names</span>
+                        <i class="fas fa-chevron-down caret-icon text-sm opacity-50 group-hover:opacity-100"></i>
+                    </button>
+
+                    <!-- Collapsible Description -->
+                    <div id="detailsContent" class="details-content w-full bg-slate-800/50 rounded-lg border border-slate-700/50 text-left">
+                        <div class="p-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-300">
+                            <div>
+                                <h3 class="text-indigo-400 font-bold mb-2"><i class="fas fa-language mr-1"></i> Multilingual Phonetics</h3>
+                                <p class="leading-relaxed opacity-80">
+                                    Combines phonetic rules from <strong>English, Polish, Spanish, German, French, Italian, and Portuguese</strong> to create unique, believable sounds.
+                                </p>
+                                <p class="leading-relaxed opacity-80 mt-2">
+                                    Blends weighted phonetics, mood shaping, and orthography clean-up into names that stay pronounceable while still feeling original.
+                                </p>
+                            </div>
+                            <div>
+                                <h3 class="text-indigo-400 font-bold mb-2"><i class="fas fa-robot mr-1"></i> Smart Features</h3>
+                                <ul class="space-y-1 opacity-80">
+                                    <li><i class="fas fa-shield-halved text-violet-400/70 mr-1"></i> Archetype-based Generation</li>
+                                    <li><i class="fas fa-palette text-pink-500/70 mr-1"></i> Mood-based Generation</li>
+                                    <li><i class="fas fa-ruler-horizontal text-cyan-400/70 mr-1"></i> Syllable Length Selection</li>
+                                    <li><i class="fas fa-volume-high text-indigo-500/70 mr-1"></i> Native Text-to-Speech</li>
+                                    <li><i class="fas fa-heart text-rose-400/70 mr-1"></i> Browser-Saved Favourite List</li>
+                                    <li><i class="fas fa-magnifying-glass text-cyan-400/70 mr-1"></i> Fast Web Search Shortcut</li>
+                                    <li><i class="fas fa-check text-emerald-500/70 mr-1"></i> Social Handle Checks Links</li>
+                                    <li><i class="fas fa-pen text-amber-400/70 mr-1"></i> Manual Custom Name Creation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View Switcher -->
+                <div class="glass-panel p-1.5 rounded-xl w-full mt-3">
+                    <div class="grid grid-cols-3 gap-1.5" id="viewTabs" role="tablist" aria-label="CharGen views">
+                        <button class="tab-btn active" data-view="generate" role="tab" aria-selected="true">
+                            <i class="fas fa-dice"></i>
+                            <span>Generate</span>
+                        </button>
+                        <button class="tab-btn" data-view="custom" role="tab" aria-selected="false">
+                            <i class="fas fa-pen"></i>
+                            <span>Custom</span>
+                        </button>
+                        <button class="tab-btn" data-view="favorites" role="tab" aria-selected="false">
+                            <i class="fas fa-heart"></i>
+                            <span>Favourite</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Content Area -->
+            <div class="flex-1 w-full max-w-2xl px-4 pb-6 min-h-0">
+                <div id="generateView" class="view-panel active h-full flex-col gap-0.5">
+                    <!-- Controls -->
+                    <div class="glass-panel p-2.5 rounded-2xl w-full">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                            <!-- Syllable Control -->
+                            <div class="control-selector">
+                                <label class="block text-slate-300 text-sm font-semibold mb-0.5 flex justify-between">
+                                    <span>Length</span>
+                                    <span class="text-indigo-400 selector-label-value"><span id="syllableDisplay">2</span> Syllables</span>
+                                </label>
+                                <input type="range" id="syllableInput" min="2" max="4" value="2" 
+                                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                                <div class="flex justify-between text-xs text-slate-500 mt-0">
+                                    <span>Short</span>
+                                    <span>Medium</span>
+                                    <span>Long</span>
+                                </div>
+                            </div>
+
+                            <!-- Mood Selector -->
+                            <div class="control-selector">
+                                <label class="block text-slate-300 text-sm font-semibold mb-0.5 flex justify-between">
+                                    <span>Mood</span>
+                                    <!-- Dynamic Label: Changes color/text on hover/select -->
+                                    <span id="moodDisplay" class="text-indigo-400 capitalize transition-colors duration-200 selector-label-value">Neutral</span>
+                                </label>
+                                <div class="grid grid-cols-6 gap-0.5" id="moodContainer">
+                                    <!-- Neutral -->
+                                    <button class="mood-btn active text-indigo-400" data-mood="neutral">
+                                        <i class="fas fa-circle"></i>
+                                    </button>
+                                    <!-- Happy -->
+                                    <button class="mood-btn" data-mood="happy">
+                                        <i class="fas fa-face-smile"></i>
+                                    </button>
+                                    <!-- Scary -->
+                                    <button class="mood-btn" data-mood="scary">
+                                        <i class="fas fa-ghost"></i>
+                                    </button>
+                                    <!-- SciFi -->
+                                    <button class="mood-btn" data-mood="scifi">
+                                        <i class="fas fa-rocket"></i>
+                                    </button>
+                                    <!-- Fantasy -->
+                                    <button class="mood-btn" data-mood="fantasy">
+                                        <i class="fas fa-hat-wizard"></i>
+                                    </button>
+                                    <!-- Funny -->
+                                    <button class="mood-btn" data-mood="funny">
+                                        <i class="fas fa-masks-theater"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Archetype Selector -->
+                            <div class="control-selector">
+                                <label class="block text-slate-300 text-sm font-semibold mb-0.5 flex justify-between">
+                                    <span>Archetype</span>
+                                    <span id="archetypeDisplay" class="text-indigo-400 capitalize transition-colors duration-200 selector-label-value">Regular</span>
+                                </label>
+                                <div class="grid grid-cols-5 gap-0.5" id="archetypeContainer">
+                                    <button class="mood-btn active text-indigo-400" data-archetype="regular" title="Regular">
+                                        <i class="fas fa-user"></i>
+                                    </button>
+                                    <button class="mood-btn" data-archetype="hero" title="Hero">
+                                        <i class="fas fa-shield-halved"></i>
+                                    </button>
+                                    <button class="mood-btn" data-archetype="villain" title="Villain">
+                                        <i class="fas fa-skull"></i>
+                                    </button>
+                                    <button class="mood-btn" data-archetype="wizard" title="Wizard">
+                                        <i class="fas fa-wand-sparkles"></i>
+                                    </button>
+                                    <button class="mood-btn" data-archetype="monster" title="Monster">
+                                        <i class="fas fa-dragon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Results Area -->
+                    <div id="resultsGrid" class="scroll-area flex-1 overflow-y-auto space-y-0.5 pr-1">
+                        <!-- Results injected here -->
+                    </div>
+                </div>
+
+                <div id="customView" class="view-panel h-full flex-col gap-0.5">
+                    <div class="glass-panel p-4 rounded-2xl w-full">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input id="customWordInput" type="text" maxlength="48" placeholder="Type a custom character name" class="custom-input">
+                            <button id="createCustomWordBtn" class="primary-action whitespace-nowrap">
+                                <i class="fas fa-plus mr-2"></i>Create
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="customWordsList" class="scroll-area flex-1 overflow-y-auto space-y-0.5 pr-1">
+                        <!-- Custom words injected here -->
+                    </div>
+                </div>
+
+                <div id="favoritesView" class="view-panel h-full flex-col gap-0.5">
+                    <div id="favoritesList" class="scroll-area flex-1 overflow-y-auto space-y-0.5 pr-1">
+                        <!-- Favourite words injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="hidden 2xl:flex w-56 flex-none justify-start py-8">
+            <div class="ad-placeholder" aria-hidden="true">Ad Space</div>
+        </aside>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const viewTabs = document.querySelectorAll('.tab-btn');
+        const generateView = document.getElementById('generateView');
+        const customView = document.getElementById('customView');
+        const favoritesView = document.getElementById('favoritesView');
+        const syllableInput = document.getElementById('syllableInput');
+        const syllableDisplay = document.getElementById('syllableDisplay');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const moodDisplay = document.getElementById('moodDisplay');
+        const archetypeBtns = document.querySelectorAll('[data-archetype]');
+        const archetypeDisplay = document.getElementById('archetypeDisplay');
+        const detailsToggle = document.getElementById('detailsToggle');
+        const detailsContent = document.getElementById('detailsContent');
+        const caretIcon = document.querySelector('.caret-icon');
+        const customWordInput = document.getElementById('customWordInput');
+        const createCustomWordBtn = document.getElementById('createCustomWordBtn');
+        const customWordsList = document.getElementById('customWordsList');
+        const favoritesList = document.getElementById('favoritesList');
+        const favoritesCount = document.getElementById('favoritesCount');
+        const customCount = document.getElementById('customCount');
+
+        // --- State ---
+        const STORAGE_KEYS = {
+            favorites: 'chargen-favorites-v1',
+            customWords: 'chargen-custom-words-v1'
+        };
+
+        let currentSyllables = 2;
+        let currentMood = 'neutral';
+        let currentArchetype = 'regular';
+        let activeView = 'generate';
+        let isGenerating = false;
+        let favoriteEntries = loadStoredEntries(STORAGE_KEYS.favorites);
+        let customEntries = loadStoredEntries(STORAGE_KEYS.customWords);
+        let favoriteViewSnapshot = [];
+
+        // --- Event Listeners ---
+        
+        // 1. Description Toggle
+        detailsToggle.addEventListener('click', () => {
+            detailsContent.classList.toggle('open');
+            caretIcon.classList.toggle('open');
+        });
+
+        // 1a. Description Auto-Collapse
+        document.addEventListener('click', (event) => {
+            if (!detailsContent.classList.contains('open')) return;
+
+            if (!detailsToggle.contains(event.target) && !detailsContent.contains(event.target)) {
+                collapseDetailsPanel();
+            }
+        });
+
+        document.addEventListener('scroll', (event) => {
+            if (!detailsContent.classList.contains('open')) return;
+
+            if (!detailsContent.contains(event.target)) {
+                collapseDetailsPanel();
+            }
+        }, true);
+
+        document.addEventListener('wheel', (event) => {
+            if (!detailsContent.classList.contains('open')) return;
+
+            if (!detailsContent.contains(event.target) && !detailsToggle.contains(event.target)) {
+                collapseDetailsPanel();
+            }
+        }, { passive: true });
+
+        // 2. View Switcher
+        viewTabs.forEach(tab => {
+            tab.addEventListener('click', () => setActiveView(tab.dataset.view));
+        });
+
+        // 3. Syllable Input
+        syllableInput.addEventListener('input', (e) => {
+            currentSyllables = parseInt(e.target.value, 10);
+            syllableDisplay.innerText = currentSyllables;
+            resetAndGenerate();
+        });
+
+        // 4. Mood Selection & Hover Effects
+        const moodButtons = Array.from(document.querySelectorAll('[data-mood]'));
+        moodButtons.forEach(btn => {
+            // Click Handler
+            btn.addEventListener('click', () => {
+                // UI: Update active button
+                moodButtons.forEach(b => b.classList.remove('active'));
+                moodButtons.forEach(b => b.classList.remove('text-indigo-400'));
+                btn.classList.add('active');
+                btn.classList.add('text-indigo-400');
+                
+                // Logic: Update state
+                currentMood = btn.dataset.mood;
+                
+                // Label: Update to selected state (Blue)
+                moodDisplay.innerText = formatSelectorLabel(currentMood);
+                moodDisplay.classList.remove('text-slate-300');
+                moodDisplay.classList.add('text-indigo-400');
+                
+                resetAndGenerate();
+            });
+
+            // Hover In Handler
+            btn.addEventListener('mouseenter', () => {
+                // If we hover over a button that isn't the currently selected one
+                if (btn.dataset.mood !== currentMood) {
+                    moodDisplay.innerText = formatSelectorLabel(btn.dataset.mood);
+                    // Change color to Slate (neutral/preview color)
+                    moodDisplay.classList.remove('text-indigo-400');
+                    moodDisplay.classList.add('text-slate-300');
+                }
+            });
+
+            // Hover Out Handler
+            btn.addEventListener('mouseleave', () => {
+                // Revert to currently selected mood and Blue color
+                moodDisplay.innerText = formatSelectorLabel(currentMood);
+                moodDisplay.classList.remove('text-slate-300');
+                moodDisplay.classList.add('text-indigo-400');
+            });
+        });
+
+        archetypeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                archetypeBtns.forEach(button => button.classList.remove('active'));
+                archetypeBtns.forEach(button => button.classList.remove('text-indigo-400'));
+                btn.classList.add('active');
+                btn.classList.add('text-indigo-400');
+
+                currentArchetype = btn.dataset.archetype;
+
+                archetypeDisplay.innerText = formatSelectorLabel(currentArchetype);
+                archetypeDisplay.classList.remove('text-slate-300');
+                archetypeDisplay.classList.add('text-indigo-400');
+
+                resetAndGenerate();
+            });
+
+            btn.addEventListener('mouseenter', () => {
+                if (btn.dataset.archetype !== currentArchetype) {
+                    archetypeDisplay.innerText = formatSelectorLabel(btn.dataset.archetype);
+                    archetypeDisplay.classList.remove('text-indigo-400');
+                    archetypeDisplay.classList.add('text-slate-300');
+                }
+            });
+
+            btn.addEventListener('mouseleave', () => {
+                archetypeDisplay.innerText = formatSelectorLabel(currentArchetype);
+                archetypeDisplay.classList.remove('text-slate-300');
+                archetypeDisplay.classList.add('text-indigo-400');
+            });
+        });
+
+        // 5. Infinite Scroll
+        resultsGrid.addEventListener('scroll', () => {
+            if (activeView !== 'generate') return;
+
+            const { scrollTop, scrollHeight, clientHeight } = resultsGrid;
+            // Buffer of 100px before bottom
+            if (scrollTop + clientHeight >= scrollHeight - 100) {
+                if (!isGenerating) {
+                    generateBatch(5); // Load 5 more
+                }
+            }
+        });
+
+        // 6. Custom Word Creation
+        createCustomWordBtn.addEventListener('click', () => createCustomWord());
+        customWordInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                createCustomWord();
+            }
+        });
+
+        // --- Logic ---
+
+        function loadStoredEntries(storageKey) {
+            try {
+                const rawValue = localStorage.getItem(storageKey);
+                if (!rawValue) return [];
+
+                const parsedValue = JSON.parse(rawValue);
+                return Array.isArray(parsedValue) ? parsedValue : [];
+            } catch (error) {
+                console.error('Storage Error', error);
+                return [];
+            }
+        }
+
+        function saveStoredEntries(storageKey, entries) {
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(entries));
+            } catch (error) {
+                console.error('Storage Error', error);
+            }
+        }
+
+        function generateEntryId(prefix = 'entry') {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return `${prefix}-${window.crypto.randomUUID()}`;
+            }
+
+            return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        }
+
+        function formatSelectorLabel(value) {
+            return value.charAt(0).toUpperCase() + value.slice(1);
+        }
+
+        function updateStorageCounters() {
+            if (favoritesCount) {
+                favoritesCount.innerText = `${favoriteEntries.length} Saved`;
+            }
+
+            if (customCount) {
+                customCount.innerText = `${customEntries.length} Stored`;
+            }
+        }
+
+        function setActiveView(viewName) {
+            if (activeView === viewName) return;
+
+            if (activeView === 'favorites' && viewName !== 'favorites') {
+                favoriteViewSnapshot = [];
+            }
+
+            activeView = viewName;
+
+            viewTabs.forEach(tab => {
+                const isActive = tab.dataset.view === viewName;
+                tab.classList.toggle('active', isActive);
+                tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            generateView.classList.toggle('active', viewName === 'generate');
+            customView.classList.toggle('active', viewName === 'custom');
+            favoritesView.classList.toggle('active', viewName === 'favorites');
+
+            if (viewName === 'custom') {
+                renderCustomWords();
+                customWordInput.focus();
+            }
+
+            if (viewName === 'favorites') {
+                favoriteViewSnapshot = favoriteEntries.map(entry => ({ ...entry }));
+                renderFavoriteWords();
+            }
+
+            syncFavoriteButtons();
+        }
+
+        function collapseDetailsPanel() {
+            detailsContent.classList.remove('open');
+            caretIcon.classList.remove('open');
+        }
+
+        function resetAndGenerate() {
+            resultsGrid.innerHTML = '';
+            // Reset scroll position
+            resultsGrid.scrollTop = 0;
+            generateBatch(7); // Initial batch size
+        }
+
+        function generateBatch(count) {
+            if (activeView !== 'generate') return;
+
+            isGenerating = true;
+            
+            for (let i = 0; i < count; i++) {
+                const nameData = generateNameData(currentSyllables, currentMood, currentArchetype);
+                const { card } = createResultCard(nameData, {
+                    showDelete: true,
+                    removeTitle: 'Remove generated name',
+                    onDelete: (_, cardElement) => cardElement.remove()
+                });
+                resultsGrid.appendChild(card);
+                
+                // Staggered animation
+                setTimeout(() => card.classList.remove('opacity-0', 'translate-y-4'), i * 50);
+            }
+            
+            // Allow next batch generation after short delay
+            setTimeout(() => {
+                isGenerating = false;
+                syncFavoriteButtons();
+            }, 100);
+        }
+
+        function createCustomWord() {
+            const normalizedWord = normalizeCustomWord(customWordInput.value);
+            if (!normalizedWord) return;
+
+            const customWordEntry = {
+                id: generateEntryId('custom'),
+                name: normalizedWord,
+                pronunciation: buildCustomPronunciation(normalizedWord),
+                flavor: 'custom',
+                mood: 'neutral',
+                archetype: 'regular',
+                syllables: estimateSyllables(normalizedWord),
+                source: 'custom'
+            };
+
+            customEntries = [customWordEntry, ...customEntries];
+            saveStoredEntries(STORAGE_KEYS.customWords, customEntries);
+            updateStorageCounters();
+
+            customWordInput.value = '';
+            renderCustomWords();
+        }
+
+        function renderCustomWords() {
+            customWordsList.innerHTML = '';
+
+            if (!customEntries.length) {
+                renderEmptyState(
+                    customWordsList,
+                    'fas fa-pen',
+                    'No custom words yet',
+                    'Create a manual entry above and it will appear here with the same tools as generated results.'
+                );
+                return;
+            }
+
+            customEntries.forEach(entry => {
+                const { card } = createResultCard(entry, {
+                    showDelete: true,
+                    removeTitle: 'Remove custom name',
+                    onDelete: () => deleteCustomWord(entry.id),
+                    animateIn: false
+                });
+                customWordsList.appendChild(card);
+            });
+
+            syncFavoriteButtons();
+        }
+
+        function renderFavoriteWords() {
+            favoritesList.innerHTML = '';
+
+            if (!favoriteViewSnapshot.length) {
+                renderEmptyState(
+                    favoritesList,
+                    'fas fa-heart',
+                    'No favourites saved',
+                    'Click the heart icon on any generated or custom word to keep it here.'
+                );
+                return;
+            }
+
+            favoriteViewSnapshot.forEach(entry => {
+                const { card } = createResultCard(entry, {
+                    showDelete: true,
+                    removeTitle: 'Remove favourite',
+                    onDelete: () => removeFavoriteWord(entry.id),
+                    animateIn: false
+                });
+                favoritesList.appendChild(card);
+            });
+
+            syncFavoriteButtons();
+        }
+
+        function deleteCustomWord(entryId) {
+            customEntries = customEntries.filter(entry => entry.id !== entryId);
+            saveStoredEntries(STORAGE_KEYS.customWords, customEntries);
+            updateStorageCounters();
+            renderCustomWords();
+        }
+
+        function removeFavoriteWord(entryId) {
+            removeFavoriteEntry(entryId);
+            favoriteViewSnapshot = favoriteViewSnapshot.filter(entry => entry.id !== entryId);
+            renderFavoriteWords();
+        }
+
+        function normalizeCustomWord(rawValue) {
+            const compactValue = rawValue.trim().replace(/\s+/g, ' ');
+            if (!compactValue) return '';
+
+            return compactValue.charAt(0).toUpperCase() + compactValue.slice(1);
+        }
+
+        function buildCustomPronunciation(word) {
+            const pronunciation = word
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/gi, '·')
+                .replace(/^·+|·+$/g, '');
+
+            return pronunciation || word.toLowerCase();
+        }
+
+        function buildSocialHandleCandidate(word) {
+            const compactHandle = word
+                .toLowerCase()
+                .replace(/[^a-z0-9._-]+/gi, '');
+
+            return compactHandle || word.toLowerCase();
+        }
+
+        function estimateSyllables(word) {
+            const groups = word.toLowerCase().match(/[aeiouy]+/g);
+            return Math.max(1, groups ? groups.length : 1);
+        }
+
+        function isFavoriteEntry(entryId) {
+            return favoriteEntries.some(entry => entry.id === entryId);
+        }
+
+        function addFavoriteEntry(entry) {
+            if (isFavoriteEntry(entry.id)) return;
+
+            favoriteEntries = [{ ...entry }, ...favoriteEntries];
+            saveStoredEntries(STORAGE_KEYS.favorites, favoriteEntries);
+            updateStorageCounters();
+        }
+
+        function removeFavoriteEntry(entryId) {
+            favoriteEntries = favoriteEntries.filter(entry => entry.id !== entryId);
+            saveStoredEntries(STORAGE_KEYS.favorites, favoriteEntries);
+            updateStorageCounters();
+        }
+
+        function toggleFavoriteEntry(entry) {
+            if (isFavoriteEntry(entry.id)) {
+                removeFavoriteEntry(entry.id);
+            } else {
+                addFavoriteEntry(entry);
+            }
+
+            syncFavoriteButtons();
+        }
+
+        function syncFavoriteButtons() {
+            document.querySelectorAll('.favorite-btn[data-entry-id]').forEach(button => {
+                updateFavoriteButtonState(button, isFavoriteEntry(button.dataset.entryId));
+            });
+        }
+
+        function updateFavoriteButtonState(button, isActive) {
+            button.classList.toggle('active', isActive);
+            button.classList.toggle('inactive', !isActive);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            button.title = isActive ? 'Remove from favourites' : 'Add to favourites';
+        }
+
+        function renderEmptyState(container, iconClass, title, description) {
+            const emptyCard = document.createElement('div');
+            emptyCard.className = 'glass-panel empty-state rounded-xl px-6 py-8 text-slate-400';
+            emptyCard.innerHTML = `
+                <i class="${iconClass} text-2xl text-slate-500"></i>
+                <h3 class="text-lg font-bold text-slate-200">${title}</h3>
+                <p class="max-w-md text-sm leading-relaxed">${description}</p>
+            `;
+
+            container.appendChild(emptyCard);
+        }
+
+        function buildMetaContent(data) {
+            if (data.source === 'custom') {
+                return `
+                    <span class="text-amber-400" title="Manual custom word"><i class="fas fa-pen"></i></span>
+                    <span class="text-slate-600">•</span>
+                    ${data.syllables} SYLLABLES
+                    <span class="text-slate-600">•</span>
+                    <span class="text-slate-400 font-bold">CUSTOM</span>
+                `;
+            }
+
+            const moodIcon = MOOD_ICONS[data.mood] || MOOD_ICONS.neutral;
+            const archetypeIcon = ARCHETYPE_ICONS[data.archetype] || ARCHETYPE_ICONS.regular;
+
+            return `
+                <span class="text-indigo-400" title="Mood: ${data.mood.toUpperCase()}">${moodIcon}</span>
+                <span class="text-slate-600">•</span>
+                <span class="text-sky-300" title="Archetype: ${data.archetype.toUpperCase()}">${archetypeIcon}</span>
+                <span class="text-slate-600">•</span>
+                ${data.syllables} SYLLABLES
+                <span class="text-slate-600">•</span>
+                <span class="text-slate-400 font-bold">${data.flavor.toUpperCase()} STYLE</span>
+            `;
+        }
+
+        // --- Data & Algorithms ---
+
+        /**
+         * Base phonetic inventory by source language.
+         *
+         * Each language exposes weighted onset consonants/clusters, vowel nuclei,
+         * and coda endings, plus coarse structure probabilities for vowel starts
+         * and syllable closure.
+         */
+        const LINGUISTIC_DATA = {
+            en: {  // English
+                probabilities: { vowelStart: 0.10, coda: 0.60, finalCoda: 0.70 },
+                cons: {
+                    'b':4, 'c':4, 'd':5, 'f':4, 'g':3, 'h':4, 'j':1, 'k':3, 'l':5, 'm':4, 'n':6, 
+                    'p':4, 'r':6, 's':6, 't':8, 'v':2, 'w':3, 'x':1, 'y':1, 'z':1,
+                    // Clusters to create original feel
+                    'th':4, 'sh':3, 'ch':3, 'ph':1, 'qu':1, 'wh':1, 
+                    'st':3, 'str':1, 'br':2, 'cr':2, 'fl':2, 'gl':1, 'kl':1, 'dr':2
+                },
+                vows: {
+                    // English allows 'y' as vowel, but we handle logic in function
+                    'a':10, 'e':12, 'i':10, 'o':8, 'u':4, 'y':1,
+                    'ea':2, 'ee':2, 'ai':1, 'oa':1, 'ou':1, 'au':1
+                },
+                ends: {
+                    't':6, 'n':6, 's':6, 'd':5, 'l':5, 'm':3, 'r':5, 'ck':2, 'p':2, 'g':1, 
+                    'th':2, 'sh':2, 'st':2, 'x':1
+                }
+            },
+
+            pl: {  // Polish
+                // Polish rarely starts with vowels compared to consonants, but often ends in vowel (a, o, e)
+                probabilities: { vowelStart: 0.05, coda: 0.50, finalCoda: 0.35 },
+                cons: {
+                    'b':4, 'c':3, 'd':4, 'f':2, 'g':3, 'h':2, 'j':4, 'k':5, 'l':4, 'm':4, 'n':5, 
+                    'p':4, 'r':4, 's':4, 't':5, 'w':6, 'z':4, 
+                    // Iconic Polish clusters
+                    'cz':3, 'sz':3, 'rz':3, 'dz':2, 'prz':2, 'trz':1, 'szcz':1, 'ch':2, 'gr':1, 'kr':1
+                },
+                vows: {
+                    // 'y' is common vowel in Polish (mysz, dym)
+                    'a':10, 'e':9, 'i':8, 'o':9, 'u':5, 'y':6
+                },
+                ends: {
+                    'k':4, 'm':4, 'n':4, 'z':3, 'j':3, 'w':2, 'sz':2, 'cz':1, 'c':2
+                }
+            },
+
+            es: {  // Spanish
+                // Flowing, vocalic - very low internal coda chance (makes it flowy)
+                probabilities: { vowelStart: 0.15, coda: 0.10, finalCoda: 0.45 },
+                cons: {
+                    'b':5, 'c':6, 'd':5, 'f':3, 'g':4, 'h':2, 'j':2, 'l':5, 'm':5, 'n':7, 
+                    'p':5, 'r':6, 's':6, 't':5, 'v':3, 'z':2, 
+                    'll':2, 'rr':1, 'ch':2, 'qu':2, 'pl':1, 'tr':1, 'gr':1
+                },
+                vows: {
+                    // Spanish uses 'i' instead of 'y' for the vowel sound almost always
+                    'a':12, 'e':13, 'i':8, 'o':10, 'u':4
+                },
+                ends: {
+                    's':10, 'n':9, 'l':5, 'r':6, 'd':5, 'z':2, 'm':1
+                }
+            },
+
+            de: { // German
+                // Heavy on consonants, complex clusters, often ends in consonants (-n, -r, -t)
+                probabilities: { vowelStart: 0.10, coda: 0.55, finalCoda: 0.80 },
+                cons: {
+                    'b':4, 'd':4, 'f':4, 'g':4, 'h':4, 'j':2, 'k':4, 'l':5, 'm':4, 'n':6, 
+                    'p':2, 'r':5, 's':5, 't':6, 'v':3, 'w':4, 'z':4,
+                    // Germanic clusters
+                    'sch':5, 'st':3, 'sp':3, 'kn':2, 'pf':2, 'zw':2, 'kl':2, 'br':2, 'tr':2, 'str':2
+                },
+                vows: {
+                    'a':8, 'e':12, 'i':8, 'o':6, 'u':5,
+                    // Distinctive German digraphs
+                    'ei':3, 'ie':3, 'au':2, 'eu':1
+                },
+                ends: {
+                    'n':10, 'r':8,  // -en, -er endings are very common
+                    't':6, 'g':4, 'l':4, 'm':4, 's':4,
+                    'ch':3, 'ck':2, 'ng':2, 'st':2, 'ft':1, 'tz':1, 'ss':1
+                }
+            },
+
+            fr: { // French
+                // Flowing, uses 'qu', 'ch', silent endings (x, s, t) simulated by orthography
+                probabilities: { vowelStart: 0.15, coda: 0.20, finalCoda: 0.40 },
+                cons: {
+                    'b':4, 'c':4, 'd':4, 'f':3, 'g':3, 'h':2, 'j':3, 'l':6, 'm':5, 'n':5, 
+                    'p':4, 'r':6, 's':5, 't':5, 'v':4, 'z':1,
+                    'ch':4, 'qu':3, 'gn':2, 'cl':1, 'fl':1, 'pl':1, 'tr':1, 'gr':1
+                },
+                vows: {
+                    'a':10, 'e':12, 'i':8, 'o':8, 'u':4, 'y':1,
+                    // Iconic French vowels
+                    'ai':2, 'au':2, 'ou':3, 'oi':2, 'eau':2, 'eu':2
+                },
+                ends: {
+                    'x':2, 's':5, 't':4,  // x, s, t often silent but written
+                    'n':5, 'r':5, 'l':3, 'c':2
+                }
+            },
+
+            it: { // Italian
+                // Almost always ends in vowel. Internal clusters like 'tt', 'll' simulated by coda+onset
+                probabilities: { vowelStart: 0.15, coda: 0.30, finalCoda: 0.05 },
+                cons: {
+                    'b':4, 'c':5, 'd':4, 'f':3, 'g':4, 'h':1, 'l':5, 'm':4, 'n':5, 
+                    'p':4, 'r':5, 's':5, 't':5, 'v':3, 'z':3,
+                    'sc':3, 'ch':2, 'gn':2, 'gl':2, 'qu':2, 
+                    'st':2, 'sp':2, 'pr':2, 'tr':2, 'gr':2
+                },
+                vows: {
+                    'a':12, 'e':11, 'i':10, 'o':11, 'u':4
+                },
+                ends: {
+                    // Very rare endings, but internal syllables can close with these
+                    'n':4, 'r':4, 'l':4, 'm':3,
+                    's':1  // 's' only in loanwords usually, but keeps it spicy
+                }
+            },
+
+            pt: { // Portuguese
+                // Nasal sounds (m, n), 'lh', 'nh', 'ç' (as c).
+                probabilities: { vowelStart: 0.15, coda: 0.25, finalCoda: 0.60 },
+                cons: {
+                    'b':4, 'c':5, 'd':5, 'f':3, 'g':3, 'h':1, 'j':3, 'l':5, 'm':4, 'n':5, 
+                    'p':4, 'r':5, 's':6, 't':5, 'v':3, 'z':2,
+                    'lh':3, 'nh':3, 'ch':2, 'qu':2, // Iconic Portuguese digraphs
+                    'pr':1, 'tr':1, 'br':1
+                },
+                vows: {
+                    'a':12, 'e':12, 'i':8, 'o':10, 'u':5,
+                    'ao':2,  // 'ão' simplified to 'ao'
+                    'ei':2, 'ou':2
+                },
+                ends: {
+                    'm':8,  // 'm' is the classic nasal ending
+                    's':8, 'r':6, 'l':5, 'z':3, 'n':1
+                }
+            }
+        };
+
+        /**
+         * Icon map used to surface the selected mood in generated result cards.
+         */
+        const MOOD_ICONS = {
+            neutral: '<i class="fas fa-circle"></i>',
+            happy: '<i class="fas fa-face-smile"></i>',
+            scary: '<i class="fas fa-ghost"></i>',
+            scifi: '<i class="fas fa-rocket"></i>',
+            fantasy: '<i class="fas fa-hat-wizard"></i>',
+            funny: '<i class="fas fa-masks-theater"></i>'
+        };
+
+        /**
+         * Icon map used to surface the selected archetype in generated result cards.
+         */
+        const ARCHETYPE_ICONS = {
+            regular: '<i class="fas fa-user"></i>',
+            hero: '<i class="fas fa-shield-halved"></i>',
+            villain: '<i class="fas fa-skull"></i>',
+            wizard: '<i class="fas fa-wand-sparkles"></i>',
+            monster: '<i class="fas fa-dragon"></i>'
+        };
+
+        /**
+         * Multi-letter boundaries treated as indivisible clusters during syllable
+         * smoothing and orthography cleanup.
+         */
+        const CLUSTER_BOUNDARIES = ['szcz', 'sch', 'str', 'cz', 'sz', 'rz', 'dz', 'sh', 'ch', 'th', 'ph', 'qu', 'ng', 'ck', 'gn', 'gl', 'lh', 'nh', 'rr', 'll'];
+
+        /**
+         * Archetype-specific finishing rules applied after syllable generation.
+         *
+         * These profiles improve the chances of landing on something that reads as
+         * a proper name while keeping all final adjustments inside the currently
+         * selected language's own vowel and ending pools.
+         */
+        const NAME_FINISHING_PROFILES = {
+            regular: {
+                openTailChance: 0.08,
+                hardTailChance: 0.08,
+                preferredVowels: ['a', 'e', 'i', 'o'],
+                preferredSoftEndings: ['n', 'r', 'l', 's'],
+                preferredHardEndings: ['n', 'r', 't', 's']
+            },
+            hero: {
+                openTailChance: 0.32,
+                hardTailChance: 0.04,
+                preferredVowels: ['a', 'e', 'i', 'o'],
+                preferredSoftEndings: ['n', 'r', 'l', 's', 'm'],
+                preferredHardEndings: ['n', 'r', 'l']
+            },
+            villain: {
+                openTailChance: 0.04,
+                hardTailChance: 0.34,
+                preferredVowels: ['o', 'u', 'a'],
+                preferredSoftEndings: ['r', 'n', 's'],
+                preferredHardEndings: ['k', 'g', 'x', 'ck', 'st', 't', 'ch']
+            },
+            wizard: {
+                openTailChance: 0.24,
+                hardTailChance: 0.1,
+                preferredVowels: ['e', 'a', 'i', 'o'],
+                preferredSoftEndings: ['n', 'r', 'l', 's', 'th'],
+                preferredHardEndings: ['n', 'r', 'th']
+            },
+            monster: {
+                openTailChance: 0.02,
+                hardTailChance: 0.42,
+                preferredVowels: ['u', 'o', 'a'],
+                preferredSoftEndings: ['m', 'n', 'r'],
+                preferredHardEndings: ['k', 'g', 'x', 'ng', 'ck', 'st', 'm']
+            }
+        };
+
+        /**
+         * Mood multipliers layered over the base language pools.
+         *
+         * These weights change phoneme preference and high-level structure to push
+         * the same phonetic base toward lighter, darker, stranger, or sillier names.
+         */
+        const MOOD_CONFIGS = {
+            neutral: {
+                cons: {},
+                vows: {},
+                ends: {},
+                codaModifier: 1,
+                vowelStartModifier: 1
+            },
+            
+            happy: { // Bright, soft, bouncy (Light)
+                cons: { 'l': 2, 'm': 2, 'n': 2, 'p': 2, 'b': 2, 'f': 1.5, 's': 1.5, 't': 1.2, 'ch': 0.5, 'g': 0.5, 'k': 0.5, 'r': 0.5 },
+                vows: { 'i': 2.5, 'e': 2, 'a': 1.5, 'y': 1.5, 'ee': 2, 'u': 0.2, 'o': 0.5, 'ou': 0.2 },
+                ends: { 's': 1.5, 'l': 1.5, 'n': 1.5, 'k': 0.2, 'g': 0.2, 'r': 0.5 },
+                codaModifier: 0.5,
+                vowelStartModifier: 1.5
+            },
+            
+            scary: { // Dark, harsh, guttural (Dark, Grim)
+                cons: { 'k': 2, 'g': 2, 'z': 2, 'v': 2, 'r': 1.5, 'str': 3, 'gr': 2, 'kr': 2, 'x': 2, 'l': 0.2, 'm': 0.2 },
+                vows: { 'u': 3, 'o': 2, 'ou': 2, 'au': 2, 'i': 0.2, 'e': 0.2, 'ee': 0.1 },
+                ends: { 'k': 2, 'g': 2, 'x': 2, 'tz': 2, 'sz': 2, 'l': 0.2, 'n': 0.5 },
+                codaModifier: 1.3,
+                vowelStartModifier: 1
+            },
+            
+            scifi: { // Tech, sharp, exotic (Futuristic)
+                cons: { 'x': 4, 'z': 3, 'v': 3, 'k': 2, 'q': 3, 'qu': 2, 'ph': 2, 'th': 0.5, 'b': 0.5 },
+                vows: { 'y': 3, 'i': 2, 'ae': 3, 'oa': 2, 'io': 3, 'a': 0.5 },
+                ends: { 'x': 4, 'k': 2, 'n': 2, 't': 1.5 },
+                codaModifier: 1,
+                vowelStartModifier: 1
+            },
+            
+            fantasy: { // Flowing, archaic, mystical (Mysterious)
+                cons: { 'th': 3, 'ph': 2, 'sh': 2, 'l': 2, 'r': 1.2, 'v': 1.5, 'k': 0.5, 'g': 0.5 },
+                vows: { 'ae': 3, 'ea': 2, 'au': 2, 'a': 1.5, 'o': 1.5, 'i': 0.5 },
+                ends: { 'th': 3, 'n': 1.5, 's': 1.5, 'r': 1.5, 'k': 0.2 },
+                codaModifier: 1,
+                vowelStartModifier: 1
+            },
+            
+            funny: { // Whimsical, bouncy
+                cons: { 'b': 2, 'p': 2, 'k': 2, 'z': 2, 'qu': 2, 'w': 2, 'j': 2, 'gl': 2, 'fl': 2 },
+                vows: { 'oo': 3, 'ee': 3, 'o': 1.5, 'u': 1.5, 'a': 0.5 },
+                ends: { 'k': 2, 'p': 2, 'ng': 2, 'tz': 2, 's': 0.5 },
+                codaModifier: 1,
+                vowelStartModifier: 1
+            }
+        };
+
+        /**
+         * Archetype-specific tuning layered on top of mood and base language data.
+         *
+         * Archetypes shape the dominant language family, favored phonemes, endings,
+         * and syllable openness so names read more like character names than raw
+         * pseudo-words.
+         */
+        const ARCHETYPE_CONFIGS = {
+            regular: {
+                styleWeights: { en: 1, pl: 1, es: 1, de: 1, fr: 1, it: 1, pt: 1, mix: 1 },
+                cons: {},
+                vows: {},
+                ends: {},
+                codaModifier: 1,
+                vowelStartModifier: 1
+            },
+            hero: {
+                styleWeights: { en: 1.3, pl: 0.75, es: 1.4, de: 0.8, fr: 1.1, it: 1.35, pt: 0.9, mix: 1 },
+                cons: { 'l': 1.8, 'r': 1.6, 'v': 1.5, 'd': 1.2, 'm': 1.15, 'n': 1.15, 't': 1.1 },
+                vows: { 'a': 1.6, 'e': 1.3, 'o': 1.25, 'i': 1.1, 'ai': 1.15, 'ea': 1.1 },
+                ends: { 'n': 1.25, 'r': 1.35, 'l': 1.25, 's': 0.9, 'k': 0.3, 'g': 0.5, 'm': 1.05 },
+                codaModifier: 0.8,
+                vowelStartModifier: 1.15
+            },
+            villain: {
+                styleWeights: { en: 0.9, pl: 1.25, es: 0.75, de: 1.4, fr: 1.15, it: 0.7, pt: 0.8, mix: 1.15 },
+                cons: { 'z': 2, 'v': 1.8, 'k': 1.45, 'g': 1.45, 'r': 1.2, 'str': 2, 'gr': 1.8, 'kr': 1.8, 'rz': 1.7 },
+                vows: { 'u': 1.55, 'o': 1.45, 'a': 0.85, 'i': 0.7, 'e': 0.75 },
+                ends: { 'x': 2, 'k': 1.8, 'g': 1.65, 'r': 1.3, 't': 1.35, 'ck': 1.6, 'ch': 1.2, 'st': 1.15 },
+                codaModifier: 1.35,
+                vowelStartModifier: 0.95
+            },
+            wizard: {
+                styleWeights: { en: 1.15, pl: 0.7, es: 0.85, de: 0.75, fr: 1.2, it: 1.2, pt: 0.95, mix: 1.35 },
+                cons: { 'th': 2.2, 'ph': 1.8, 'sh': 1.8, 'ch': 1.3, 'l': 1.45, 'r': 1.35, 'm': 1.2, 'gn': 1.4, 'qu': 1.35 },
+                vows: { 'e': 1.3, 'a': 1.15, 'o': 1.15, 'au': 1.8, 'ea': 1.8, 'ou': 1.55, 'ai': 1.35, 'eu': 1.35, 'oi': 1.15 },
+                ends: { 'n': 1.55, 'r': 1.45, 's': 1.2, 'th': 1.8, 'l': 1.2, 'm': 1.05 },
+                codaModifier: 0.95,
+                vowelStartModifier: 1.2
+            },
+            monster: {
+                styleWeights: { en: 1, pl: 1.35, es: 0.7, de: 1.35, fr: 0.65, it: 0.6, pt: 0.8, mix: 1.35 },
+                cons: { 'gr': 2.2, 'kr': 2.2, 'br': 1.5, 'dr': 1.5, 'g': 1.8, 'k': 1.8, 'z': 1.5, 'ch': 1.35, 'st': 1.45, 'sp': 1.35 },
+                vows: { 'u': 1.75, 'o': 1.65, 'a': 1.15, 'e': 0.75, 'i': 0.65 },
+                ends: { 'k': 2.15, 'g': 1.8, 'x': 1.7, 'ng': 1.55, 'ck': 1.5, 'st': 1.35, 'm': 1.3, 'ch': 1.05 },
+                codaModifier: 1.55,
+                vowelStartModifier: 0.85
+            }
+        };
+
+        // --- HELPER FUNCTIONS ---
+
+        /**
+         * Returns a uniformly random entry from a plain array.
+         */
+        function getRandomItem(arr) { 
+            return arr[Math.floor(Math.random() * arr.length)]; 
+        }
+
+        /**
+         * Multiplies multiple factor maps into a single weighting map.
+         *
+         * This is how mood and archetype influences are combined before they are
+         * applied to the selected language pool.
+         */
+        function combineFactorMaps(...maps) {
+            const combined = {};
+
+            maps.forEach(map => {
+                Object.entries(map || {}).forEach(([key, value]) => {
+                    combined[key] = (combined[key] || 1) * value;
+                });
+            });
+
+            return combined;
+        }
+
+        /**
+         * Converts the chosen style into a stable generation plan.
+         *
+         * Non-mixed styles stay single-language. Mixed styles are split into a
+         * dominant language with a secondary accent language to keep outputs more
+         * coherent than fully random per-syllable switching.
+         */
+        function buildStylePlan(globalStyle, styleWeights) {
+            if (globalStyle !== 'mix') {
+                return { dominant: globalStyle, accent: globalStyle, isMixed: false };
+            }
+
+            const nonMixedWeights = { ...styleWeights };
+            delete nonMixedWeights.mix;
+
+            const dominant = getWeightedItem(nonMixedWeights);
+            const accentWeights = { ...nonMixedWeights };
+            delete accentWeights[dominant];
+            const accent = Object.keys(accentWeights).length ? getWeightedItem(accentWeights) : dominant;
+
+            return { dominant, accent, isMixed: true };
+        }
+
+        /**
+         * Chooses which language should generate the current syllable.
+         *
+         * Mixed styles heavily favor the dominant language while occasionally
+         * pulling from the accent language for variety.
+         */
+        function pickSyllableLanguage(stylePlan, syllableIndex) {
+            if (!stylePlan.isMixed) {
+                return stylePlan.dominant;
+            }
+
+            if (syllableIndex === 0 || Math.random() < 0.72) {
+                return stylePlan.dominant;
+            }
+
+            return stylePlan.accent;
+        }
+
+        /**
+         * Extracts the leading or trailing phonetic boundary from a syllable.
+         *
+         * Cluster-aware extraction prevents cleanup logic from treating digraphs and
+         * trigraphs as separate letters.
+         */
+        function getBoundaryChunk(fragment, position) {
+            const lowered = fragment.toLowerCase();
+
+            return CLUSTER_BOUNDARIES.find(chunk => {
+                return position === 'start' ? lowered.startsWith(chunk) : lowered.endsWith(chunk);
+            }) || (position === 'start' ? lowered.charAt(0) : lowered.slice(-1));
+        }
+
+        /**
+         * Smooths transitions between generated syllables.
+         *
+         * The goal is to reduce doubled boundaries and awkward vowel collisions
+         * before the final word is assembled.
+         */
+        function smoothSyllableSequence(parts) {
+            const smoothed = [];
+
+            parts.forEach((part, index) => {
+                let currentPart = part;
+
+                if (index > 0) {
+                    const previousPart = smoothed[smoothed.length - 1];
+                    const previousBoundary = getBoundaryChunk(previousPart, 'end');
+                    const currentBoundary = getBoundaryChunk(currentPart, 'start');
+
+                    if (previousBoundary && currentBoundary && previousBoundary === currentBoundary) {
+                        currentPart = currentPart.slice(currentBoundary.length);
+                    }
+
+                    if (/[aeiouy]$/i.test(previousPart) && /^[aeiouy]/i.test(currentPart)) {
+                        const hasLongVowelBoundary = /[aeiouy]{2}$/i.test(previousPart) || /^[aeiouy]{2}/i.test(currentPart);
+                        const repeatedBoundaryVowel = previousPart.slice(-1).toLowerCase() === currentPart.charAt(0).toLowerCase();
+
+                        if (hasLongVowelBoundary || repeatedBoundaryVowel) {
+                            currentPart = currentPart.slice(1);
+                        }
+                    }
+                }
+
+                smoothed.push(currentPart || part);
+            });
+
+            return smoothed;
+        }
+
+        /**
+         * Returns only the requested tokens that actually exist in a language pool.
+         *
+         * This keeps archetype finishing and weighted selection inside the chosen
+         * language's native phoneme inventory.
+         */
+        function filterAvailableTokens(weightMap, preferredTokens) {
+            return preferredTokens.filter(token => weightMap[token] !== undefined);
+        }
+
+        /**
+         * Picks from a preferred subset when possible, otherwise falls back to the
+         * entire provided pool.
+         */
+        function getPreferredWeightedItem(weightMap, preferredTokens, factorMap = {}) {
+            const availableTokens = filterAvailableTokens(weightMap, preferredTokens);
+
+            if (!availableTokens.length) {
+                return getWeightedItem(weightMap, factorMap);
+            }
+
+            const narrowedPool = availableTokens.reduce((pool, token) => {
+                pool[token] = weightMap[token];
+                return pool;
+            }, {});
+
+            return getWeightedItem(narrowedPool, factorMap);
+        }
+
+        /**
+         * Detects which configured ending token a word currently finishes with.
+         *
+         * Longer tokens are checked first so digraphs and trigraphs win over
+         * single-character matches.
+         */
+        function detectWordEnding(word, endings) {
+            return Object.keys(endings)
+                .sort((left, right) => right.length - left.length)
+                .find(ending => word.endsWith(ending)) || '';
+        }
+
+        /**
+         * Applies archetype-aware final-name shaping using only the active
+         * language's own vowel and ending groups.
+         *
+         * This preserves language-specific phonotactics while nudging results
+         * toward softer or harsher proper-name endings.
+         */
+        function refineNameEnding(word, config, archetype, combinedEndFactors) {
+            const profile = NAME_FINISHING_PROFILES[archetype] || NAME_FINISHING_PROFILES.regular;
+            const cleanedWord = word.toLowerCase();
+            const currentEnding = detectWordEnding(cleanedWord, config.ends);
+            const endsWithVowel = /[aeiouy]$/i.test(cleanedWord);
+            const hasHarshEnding = ['k', 'g', 'x', 'ck', 'st', 'tz', 'ch', 'th'].includes(currentEnding);
+
+            if (!endsWithVowel && hasHarshEnding && Math.random() < profile.openTailChance) {
+                const tailVowel = getPreferredWeightedItem(config.vows, profile.preferredVowels);
+                return cleanOrthography(cleanedWord + tailVowel);
+            }
+
+            if (!endsWithVowel && Math.random() < profile.openTailChance * 0.55) {
+                const softenedEnding = getPreferredWeightedItem(config.ends, profile.preferredSoftEndings, combinedEndFactors);
+                return cleanOrthography(cleanedWord.slice(0, Math.max(0, cleanedWord.length - currentEnding.length)) + softenedEnding);
+            }
+
+            if (endsWithVowel && Math.random() < profile.hardTailChance) {
+                const harderEnding = getPreferredWeightedItem(config.ends, profile.preferredHardEndings, combinedEndFactors);
+                return cleanOrthography(cleanedWord + harderEnding);
+            }
+
+            return cleanedWord;
+        }
+
+        /**
+         * Picks one key from a weighted map, optionally modified by a factor map.
+         *
+         * This is the core weighted-random selector used for styles, consonants,
+         * vowels, and endings throughout the generator.
+         */
+        function getWeightedItem(baseWeights, moodFactors = {}) {
+            let total = 0;
+            const keys = Object.keys(baseWeights);
+            
+            // We need to calculate temporary weights based on the mood
+            const currentWeights = {};
+            
+            for (let k of keys) {
+                let weight = baseWeights[k];
+                
+                // Apply modifier if it exists for this character
+                if (moodFactors[k] !== undefined) {
+                    weight = weight * moodFactors[k];
+                }
+                
+                currentWeights[k] = weight;
+                total += weight;
+            }
+            
+            // Standard weighted random selection
+            let random = Math.random() * total; // using float to support multiplier math
+            
+            for (let k of keys) {
+                random -= currentWeights[k];
+                if (random < 0) return k;
+            }
+            return keys[0];
+        }
+
+        /**
+         * Selects a vowel nucleus while enforcing a few orthographic sanity rules.
+         *
+         * This keeps the generator from producing obviously broken sequences such as
+         * invalid `qu` combinations or language-inappropriate `y` openings.
+         */
+        function getValidVowel(langVowels, onset, language, isFirstSyllable, moodFactors = {}) {
+            let vowel = getWeightedItem(langVowels, moodFactors);
+            
+            // Safety loop to ensure valid combination
+			// We limit retries to avoid infinite loops, though unlikely with this data.
+            let attempts = 0;
+            let isValid = false;
+
+            while (!isValid && attempts < 10) {
+                isValid = true;
+                attempts++;
+
+                // RULE 1: The 'QU' Constraint (Universal)
+                // If onset is 'qu', vowel must not be 'u', 'o' or 'y'.
+                if (onset === 'qu' && ['u', 'o', 'y', 'ou', 'au', 'oi', 'ao', 'eau'].includes(vowel)) {
+                    isValid = false;
+                }
+
+                // RULE 2: The 'Y/J' Constraint (Universal)
+                // If onset is 'y' or 'j', avoid 'i' or 'y' immediately after.
+				// (Prevents "Jyi" or "Yy").
+                if ((onset === 'y' || onset === 'j') && (vowel === 'i' || vowel === 'y' || vowel === 'ie' || vowel === 'ei')) {
+                    isValid = false;
+                }
+
+                // RULE 3: Polish/German 'Y' Constraint
+                // Polish/German words rarely start with 'y' as vowel
+                if ((language === 'pl' || language === 'de') && isFirstSyllable && !onset && vowel === 'y') {
+                    isValid = false;
+                }
+
+                // RULE 4: English 'Y' Constraint
+                // English rarely starts with 'y' as a vowel (e.g. "Yttrium" is rare).
+				// If no onset (vowel start), prefer other vowels.
+                if (language === 'en' && isFirstSyllable && !onset && vowel === 'y') {
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    vowel = getWeightedItem(langVowels, moodFactors);
+                }
+            }
+            
+            // Fallback if random generator is stubborn
+            if (!isValid) return 'a'; 
+            return vowel;
+        }
+
+        /**
+         * Final orthographic cleanup for the assembled word.
+         *
+         * This collapses repeated clusters and overlong repeated vowels or
+         * consonants without aggressively rewriting the generated structure.
+         */
+        function cleanOrthography(word) {
+            return word
+                .replace(/(szcz|sch|str|cz|sz|rz|dz|sh|ch|th|ph|qu|ng|ck|gn|gl|lh|nh)\1/gi, '$1')
+                .replace(/([aeiouy])\1{2,}/gi, '$1$1')
+                .replace(/([^aeiouy])\1{2,}/gi, '$1$1')
+                .replace(/[aeiouy]{3,}/gi, match => match.slice(0, 2));
+        }
+
+        // --- MAIN GENERATOR ---
+
+        /**
+         * Generates one name candidate and its display metadata.
+         *
+         * The generator combines base language data with mood and archetype tuning,
+         * chooses a style plan, creates each syllable, smooths boundaries, and then
+         * returns both the rendered name and the trace metadata used by the UI.
+         *
+         * @param {number} numSyllables Requested syllable count.
+         * @param {string} mood Active mood preset.
+         * @param {string} archetype Active archetype preset.
+         */
+        function generateNameData(numSyllables, mood = 'neutral', archetype = 'regular') {
+            let parts = [];
+            
+            // Normalize mood input
+            const cleanMood = (MOOD_CONFIGS[mood]) ? mood : 'neutral';
+            const moodData = MOOD_CONFIGS[cleanMood];
+            const cleanArchetype = (ARCHETYPE_CONFIGS[archetype]) ? archetype : 'regular';
+            const archetypeData = ARCHETYPE_CONFIGS[cleanArchetype];
+            const combinedConsFactors = combineFactorMaps(moodData.cons, archetypeData.cons);
+            const combinedVowelFactors = combineFactorMaps(moodData.vows, archetypeData.vows);
+            const combinedEndFactors = combineFactorMaps(moodData.ends, archetypeData.ends);
+
+            // Select Style
+            const styles = ['en', 'pl', 'es', 'de', 'fr', 'it', 'pt', 'mix'];
+            const globalStyle = getWeightedItem(
+                styles.reduce((accumulator, style) => {
+                    accumulator[style] = archetypeData.styleWeights[style] || 1;
+                    return accumulator;
+                }, {})
+            );
+            const stylePlan = buildStylePlan(globalStyle, archetypeData.styleWeights);
+            let terminalLanguage = stylePlan.dominant;
+
+            for (let i = 0; i < numSyllables; i++) {
+                const isLast = (i === numSyllables - 1);
+                const isFirst = (i === 0);
+                
+                // Determine Language for this syllable
+                let lang = pickSyllableLanguage(stylePlan, i);
+                terminalLanguage = lang;
+                const config = LINGUISTIC_DATA[lang];
+                
+                // 1. Determine Structure (Onset - Nucleus - Coda)
+                let hasOnset = true;
+                let hasCoda = false;
+
+                const codaModifier = (moodData.codaModifier || 1) * (archetypeData.codaModifier || 1);
+                const vowelStartModifier = (moodData.vowelStartModifier || 1) * (archetypeData.vowelStartModifier || 1);
+
+                // Vowel Start Chance (only for first syllable)
+                if (isFirst && Math.random() < (config.probabilities.vowelStart * vowelStartModifier)) {
+                    hasOnset = false;
+                }
+
+                // Coda Chance
+                const baseCodaChance = isLast ? config.probabilities.finalCoda : config.probabilities.coda;
+                if (Math.random() < (baseCodaChance * codaModifier)) {
+                    hasCoda = true;
+                }
+
+                // 2. Generate Syllable
+                let s = "";
+                let onsetStr = "";
+                
+                if (hasOnset) {
+                    onsetStr = getWeightedItem(config.cons, combinedConsFactors);
+                    s += onsetStr;
+                }
+
+                s += getValidVowel(config.vows, onsetStr, lang, isFirst, combinedVowelFactors);
+
+                if (hasCoda) {
+                    s += getWeightedItem(config.ends, combinedEndFactors);
+                }
+
+                parts.push(s);
+            }
+
+            parts = smoothSyllableSequence(parts);
+
+            // 3. Assemble and Clean
+            let rawWord = parts.join('');
+            let cleanedWord = cleanOrthography(rawWord);
+            cleanedWord = refineNameEnding(cleanedWord, LINGUISTIC_DATA[terminalLanguage], cleanArchetype, combinedEndFactors);
+
+            // Capitalize
+            cleanedWord = cleanedWord.charAt(0).toUpperCase() + cleanedWord.slice(1);
+
+            return {
+                id: generateEntryId('generated'),
+                name: cleanedWord,
+                pronunciation: parts.join('·').toLowerCase(),
+                flavor: globalStyle,
+                mood: cleanMood,
+                archetype: cleanArchetype,
+                syllables: numSyllables,
+                source: 'generated'
+            };
+        }
+
+        // --- Speech Logic ---
+        let voices = [];
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
+
+        function speakWord(text, langCode) {
+            window.speechSynthesis.cancel(); // Stop current speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Try to find a high-quality voice for the specific language
+            const voiceMap = { 'en': 'en-US', 'pl': 'pl-PL', 'es': 'es-ES', 'de': 'de-DE', 'fr': 'fr-FR', 'it': 'it-IT', 'pt': 'pt-PT' };
+            const targetLang = voiceMap[langCode];
+            
+            const preferredVoice = voices.find(v => v.lang.startsWith(targetLang) && v.localService) || 
+                                  voices.find(v => v.lang.startsWith(targetLang));
+            
+            if (preferredVoice) utterance.voice = preferredVoice;
+            utterance.lang = targetLang;
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function createResultCard(data, options = {}) {
+            const normalizedEntry = {
+                ...data,
+                pronunciation: data.pronunciation || buildCustomPronunciation(data.name),
+                flavor: data.flavor || 'custom',
+                mood: data.mood || 'neutral',
+                archetype: data.archetype || 'regular',
+                syllables: data.syllables || estimateSyllables(data.name),
+                source: data.source || 'generated'
+            };
+            const socialHandle = buildSocialHandleCandidate(normalizedEntry.name);
+
+            const card = document.createElement('div');
+            card.className = 'result-card glass-panel transition-all duration-300 opacity-0 transform translate-y-4 flex-none';
+            card.dataset.entryId = normalizedEntry.id;
+
+            if (options.animateIn === false) {
+                card.classList.remove('opacity-0', 'translate-y-4');
+            }
+            
+            const leftDiv = document.createElement('div');
+            leftDiv.className = 'result-main';
+            
+            // Generated Name
+            const nameEl = document.createElement('h2');
+            nameEl.className = 'result-name font-bold tracking-wide cursor-pointer hover:text-indigo-400 transition-colors break-words';
+            nameEl.innerText = normalizedEntry.name;
+            nameEl.onclick = () => {
+                navigator.clipboard.writeText(normalizedEntry.name);
+                const oldText = nameEl.innerText;
+                nameEl.innerText = 'Copied!';
+                setTimeout(() => nameEl.innerText = oldText, 1000);
+            };
+
+            // Speaker Buttons Container
+            const speakersEl = document.createElement('div');
+            speakersEl.className = 'speaker-row flex flex-wrap bg-slate-900/50 rounded-lg border border-white/5';
+            ['en', 'pl', 'es', 'de', 'fr', 'it', 'pt'].forEach(lang => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn-icon';
+                btn.innerHTML = `<i class="fas fa-volume-up text-xs"></i><span class="lang-tag">${lang.toUpperCase()}</span>`;
+                btn.onclick = () => speakWord(normalizedEntry.name, lang);
+                speakersEl.appendChild(btn);
+            });
+
+            // Pronunciation
+            const pronunciationEl = document.createElement('div');
+            pronunciationEl.className = 'result-pronunciation text-slate-400';
+            pronunciationEl.innerHTML = `<span class="font-mono text-indigo-300/80 tracking-wider">/${normalizedEntry.pronunciation}/</span>`;
+
+            // Syllables and Style
+            const metaEl = document.createElement('div');
+            metaEl.className = 'result-meta text-slate-500 uppercase flex items-center flex-wrap';
+            metaEl.innerHTML = buildMetaContent(normalizedEntry);
+
+            leftDiv.appendChild(nameEl);
+            leftDiv.appendChild(pronunciationEl);
+            leftDiv.appendChild(speakersEl);
+            leftDiv.appendChild(metaEl);
+
+            const rightDiv = document.createElement('div');
+            rightDiv.className = 'result-side';
+
+            const actionGroup = document.createElement('div');
+            actionGroup.className = 'result-actions';
+
+            const favoriteBtn = document.createElement('button');
+            favoriteBtn.type = 'button';
+            favoriteBtn.className = 'utility-btn compact-btn favorite-btn inactive';
+            favoriteBtn.dataset.entryId = normalizedEntry.id;
+            favoriteBtn.innerHTML = '<i class="fas fa-heart"></i>';
+            favoriteBtn.onclick = () => toggleFavoriteEntry(normalizedEntry);
+
+            const searchBtn = document.createElement('a');
+            searchBtn.href = `https://www.google.com/search?q=${encodeURIComponent(normalizedEntry.name)}`;
+            searchBtn.target = '_blank';
+            searchBtn.rel = 'noreferrer noopener';
+            searchBtn.className = 'utility-btn compact-btn';
+            searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+            searchBtn.title = 'Search the web';
+
+            const socialPlatforms = [
+                {
+                    title: 'Check YouTube handle',
+                    iconClass: 'fa-brands fa-youtube',
+                    href: `https://www.youtube.com/@${encodeURIComponent(socialHandle)}`
+                },
+                {
+                    title: 'Check Facebook username',
+                    iconClass: 'fa-brands fa-facebook-f',
+                    href: `https://www.facebook.com/${encodeURIComponent(socialHandle)}`
+                },
+                {
+                    title: 'Check X handle',
+                    iconClass: 'fa-brands fa-x-twitter',
+                    href: `https://x.com/${encodeURIComponent(socialHandle)}`
+                },
+                {
+                    title: 'Check Instagram handle',
+                    iconClass: 'fa-brands fa-instagram',
+                    href: `https://www.instagram.com/${encodeURIComponent(socialHandle)}/`
+                },
+                {
+                    title: 'Check TikTok handle',
+                    iconClass: 'fa-brands fa-tiktok',
+                    href: `https://www.tiktok.com/@${encodeURIComponent(socialHandle)}`
+                },
+                {
+                    title: 'Check Twitch handle',
+                    iconClass: 'fa-brands fa-twitch',
+                    href: `https://www.twitch.tv/${encodeURIComponent(socialHandle)}`
+                },
+                {
+                    title: 'Check Reddit username',
+                    iconClass: 'fa-brands fa-reddit-alien',
+                    href: `https://www.reddit.com/user/${encodeURIComponent(socialHandle)}`
+                },
+                {
+                    title: 'Check Pinterest username',
+                    iconClass: 'fa-brands fa-pinterest-p',
+                    href: `https://www.pinterest.com/${encodeURIComponent(socialHandle)}/`
+                },
+                {
+                    title: 'Check Threads handle',
+                    iconClass: 'fa-brands fa-threads',
+                    href: `https://www.threads.com/@${encodeURIComponent(socialHandle)}`
+                },
+                {
+                    title: 'Check Snapchat username',
+                    iconClass: 'fa-brands fa-snapchat',
+                    href: `https://www.snapchat.com/add/${encodeURIComponent(socialHandle)}`
+                },
+                {
+                    title: 'Check Tumblr blog',
+                    iconClass: 'fa-brands fa-tumblr',
+                    href: `https://${encodeURIComponent(socialHandle)}.tumblr.com`
+                },
+                {
+                    title: 'Check Bluesky handle',
+                    iconClass: 'fa-brands fa-bluesky',
+                    href: `https://bsky.app/profile/${encodeURIComponent(socialHandle)}.bsky.social`
+                }
+            ];
+
+            actionGroup.appendChild(favoriteBtn);
+            actionGroup.appendChild(searchBtn);
+            socialPlatforms.forEach(platform => {
+                const socialBtn = document.createElement('a');
+                socialBtn.href = platform.href;
+                socialBtn.target = '_blank';
+                socialBtn.rel = 'noreferrer noopener';
+                socialBtn.className = 'utility-btn compact-btn';
+                socialBtn.innerHTML = `<i class="${platform.iconClass}"></i>`;
+                socialBtn.title = platform.title;
+                actionGroup.appendChild(socialBtn);
+            });
+
+            if (options.showDelete) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'utility-btn compact-btn delete-btn delete-action';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.title = options.removeTitle || 'Remove from this list';
+                deleteBtn.onclick = () => options.onDelete?.(normalizedEntry, card);
+                actionGroup.appendChild(deleteBtn);
+            }
+
+            rightDiv.appendChild(actionGroup);
+
+            card.appendChild(leftDiv);
+            card.appendChild(rightDiv);
+
+            return { card };
+        }
+
+        // Initialize
+        window.onload = () => {
+            updateStorageCounters();
+            resetAndGenerate();
+        };
+
+    </script>
+</body>
+</html>
